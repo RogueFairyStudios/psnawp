@@ -263,7 +263,7 @@ class User:
         param = {"limit": min(limit, 800)}
 
         response = self._request_builder.get(
-            url=f"{User.trophy_base_uri}/v1/users/{self.account_id}/trophyTitles",
+            url=f"{BASE_PATH['trophy_base_uri']}/v1/users/{self.account_id}/trophyTitles",
             params=param,
         )
         return response.json()
