@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.10.8, pytest-7.1.3, pluggy-1.0.0
+platform linux -- Python 3.11.1, pytest-7.1.3, pluggy-1.0.0
 rootdir: /home/runner/work/psnawp/psnawp, configfile: pyproject.toml, testpaths: tests
 plugins: vcr-1.0.2, cov-4.0.0
 collected 35 items
@@ -19,50 +19,47 @@ ___________________ ERROR at setup of test_client__online_id ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_client__account_id ___________________
 
     @pytest.fixture(scope="session")
@@ -71,50 +68,47 @@ __________________ ERROR at setup of test_client__account_id ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ______________ ERROR at setup of test_client__get_profile_legacy _______________
 
     @pytest.fixture(scope="session")
@@ -123,50 +117,47 @@ ______________ ERROR at setup of test_client__get_profile_legacy _______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ________________ ERROR at setup of test_client__account_devices ________________
 
     @pytest.fixture(scope="session")
@@ -175,50 +166,47 @@ ________________ ERROR at setup of test_client__account_devices ________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_client__get_friends __________________
 
     @pytest.fixture(scope="session")
@@ -227,50 +215,47 @@ __________________ ERROR at setup of test_client__get_friends __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_client__get_groups ___________________
 
     @pytest.fixture(scope="session")
@@ -279,50 +264,47 @@ __________________ ERROR at setup of test_client__get_groups ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _______________ ERROR at setup of test_client__available_to_play _______________
 
     @pytest.fixture(scope="session")
@@ -331,50 +313,47 @@ _______________ ERROR at setup of test_client__available_to_play _______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_client__blocked_list __________________
 
     @pytest.fixture(scope="session")
@@ -383,50 +362,47 @@ _________________ ERROR at setup of test_client__blocked_list __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_client__repr_and_str __________________
 
     @pytest.fixture(scope="session")
@@ -435,50 +411,47 @@ _________________ ERROR at setup of test_client__repr_and_str __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ______________ ERROR at setup of test_group__group_incorrect_args ______________
 
     @pytest.fixture(scope="session")
@@ -487,50 +460,47 @@ ______________ ERROR at setup of test_group__group_incorrect_args ______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ______________ ERROR at setup of test_group__group_with_wrong_id _______________
 
     @pytest.fixture(scope="session")
@@ -539,50 +509,47 @@ ______________ ERROR at setup of test_group__group_with_wrong_id _______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ________________ ERROR at setup of test_group__group_with_users ________________
 
     @pytest.fixture(scope="session")
@@ -591,50 +558,47 @@ ________________ ERROR at setup of test_group__group_with_users ________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_group__group_with_id __________________
 
     @pytest.fixture(scope="session")
@@ -643,50 +607,47 @@ _________________ ERROR at setup of test_group__group_with_id __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_group__repr_and_str __________________
 
     @pytest.fixture(scope="session")
@@ -695,50 +656,47 @@ __________________ ERROR at setup of test_group__repr_and_str __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_group__change_name_dm _________________
 
     @pytest.fixture(scope="session")
@@ -747,50 +705,47 @@ _________________ ERROR at setup of test_group__change_name_dm _________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _______________ ERROR at setup of test_group__dming_blocked_user _______________
 
     @pytest.fixture(scope="session")
@@ -799,50 +754,47 @@ _______________ ERROR at setup of test_group__dming_blocked_user _______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_group__change_name ___________________
 
     @pytest.fixture(scope="session")
@@ -851,50 +803,47 @@ __________________ ERROR at setup of test_group__change_name ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_group__leave_group ___________________
 
     @pytest.fixture(scope="session")
@@ -903,50 +852,47 @@ __________________ ERROR at setup of test_group__leave_group ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _______________ ERROR at setup of test_search__universal_search ________________
 
     @pytest.fixture(scope="session")
@@ -955,50 +901,47 @@ _______________ ERROR at setup of test_search__universal_search ________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _______________ ERROR at setup of test_search__get_title_details _______________
 
     @pytest.fixture(scope="session")
@@ -1007,50 +950,47 @@ _______________ ERROR at setup of test_search__get_title_details _______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ______________________ ERROR at setup of test_user__user _______________________
 
     @pytest.fixture(scope="session")
@@ -1059,50 +999,47 @@ ______________________ ERROR at setup of test_user__user _______________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_user__user_account_id _________________
 
     @pytest.fixture(scope="session")
@@ -1111,50 +1048,47 @@ _________________ ERROR at setup of test_user__user_account_id _________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ________________ ERROR at setup of test_user__user_no_argument _________________
 
     @pytest.fixture(scope="session")
@@ -1163,50 +1097,47 @@ ________________ ERROR at setup of test_user__user_no_argument _________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ________________ ERROR at setup of test_user__user_wrong_acc_id ________________
 
     @pytest.fixture(scope="session")
@@ -1215,50 +1146,47 @@ ________________ ERROR at setup of test_user__user_wrong_acc_id ________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_user__prev_online_id __________________
 
     @pytest.fixture(scope="session")
@@ -1267,50 +1195,47 @@ _________________ ERROR at setup of test_user__prev_online_id __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _________________ ERROR at setup of test_user__user_not_found __________________
 
     @pytest.fixture(scope="session")
@@ -1319,50 +1244,47 @@ _________________ ERROR at setup of test_user__user_not_found __________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _____________ ERROR at setup of test_user__user_acct_id_not_found ______________
 
     @pytest.fixture(scope="session")
@@ -1371,50 +1293,47 @@ _____________ ERROR at setup of test_user__user_acct_id_not_found ______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_user__get_presence ___________________
 
     @pytest.fixture(scope="session")
@@ -1423,50 +1342,47 @@ __________________ ERROR at setup of test_user__get_presence ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 _____________ ERROR at setup of test_user__get_presence_forbidden ______________
 
     @pytest.fixture(scope="session")
@@ -1475,50 +1391,47 @@ _____________ ERROR at setup of test_user__get_presence_forbidden ______________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ___________________ ERROR at setup of test_user__friendship ____________________
 
     @pytest.fixture(scope="session")
@@ -1527,50 +1440,47 @@ ___________________ ERROR at setup of test_user__friendship ____________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 ___________________ ERROR at setup of test_user__is_blocked ____________________
 
     @pytest.fixture(scope="session")
@@ -1579,50 +1489,47 @@ ___________________ ERROR at setup of test_user__is_blocked ____________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 __________________ ERROR at setup of test_user__repr_and_str ___________________
 
     @pytest.fixture(scope="session")
@@ -1631,50 +1538,47 @@ __________________ ERROR at setup of test_user__repr_and_str ___________________
 
 tests/conftest.py:13: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py:39: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py:39: in __init__
     authenticator.Authenticator(npsso_cookie)
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:36: in __init__
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:36: in __init__
     self._authenticate()
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py:123: in _authenticate
+    response.raise_for_status()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <psnawp_api.core.authenticator.Authenticator object at 0x7f539e59fd60>
+self = <Response [400]>
 
-    def _authenticate(self) -> None:
-        """Authenticate using the npsso code provided in the constructor.
+    def raise_for_status(self):
+        """Raises :class:`HTTPError`, if one occurred."""
     
-        Obtains the access code and the refresh code. Access code lasts about 1 hour.
-        While the refresh code lasts about 2 months. After 2 months a new npsso code is
-        needed.
+        http_error_msg = ""
+        if isinstance(self.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = self.reason.decode("utf-8")
+            except UnicodeDecodeError:
+                reason = self.reason.decode("iso-8859-1")
+        else:
+            reason = self.reason
     
-        :raises: ``PSNAWPAuthenticationError`` If authentication is not successful.
+        if 400 <= self.status_code < 500:
+            http_error_msg = (
+                f"{self.status_code} Client Error: {reason} for url: {self.url}"
+            )
     
-        """
-        cookies = {"Cookie": f"npsso={self._npsso_token}"}
-        params = {
-            "access_type": "offline",
-            "client_id": Authenticator.__PARAMS["CLIENT_ID"],
-            "scope": Authenticator.__PARAMS["SCOPE"],
-            "redirect_uri": Authenticator.__PARAMS["REDIRECT_URI"],
-            "response_type": "code",
-        }
-        response = requests.get(
-            f"{BASE_PATH['base_uri']}{API_PATH['oauth_code']}",
-            headers=cookies,
-            params=params,
-            allow_redirects=False,
-        )
-        response.raise_for_status()
-        location_url = response.headers["location"]
-        parsed_url = urlparse(location_url)
-        parsed_query = parse_qs(parsed_url.query)
-        if "error" in parsed_query.keys():
-            if "4165" in parsed_query["error_code"]:
->               raise psnawp_exceptions.PSNAWPAuthenticationError(
-                    "Your npsso code has expired or is incorrect. Please generate a new code!"
-                )
-E               psnawp_api.core.psnawp_exceptions.PSNAWPAuthenticationError: Your npsso code has expired or is incorrect. Please generate a new code!
+        elif 500 <= self.status_code < 600:
+            http_error_msg = (
+                f"{self.status_code} Server Error: {reason} for url: {self.url}"
+            )
+    
+        if http_error_msg:
+>           raise HTTPError(http_error_msg, response=self)
+E           requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=ac8d161a-d966-4728-b0ea-ffec22f69edc&scope=psn%3Aclientapp+psn%3Amobile.v1&redirect_uri=com.playstation.PlayStationApp%3A%2F%2Fredirect&response_type=code
 
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py:129: PSNAWPAuthenticationError
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/requests/models.py:1021: HTTPError
 =================================== FAILURES ===================================
 _____________ test_authenticator__access_token_from_refresh_token ______________
 
@@ -1693,58 +1597,58 @@ E             + VaultTec_Trading
 tests/unit_tests/test_authenticator.py:19: AssertionError
 -------- generated xml file: /home/runner/work/psnawp/psnawp/pytest.xml --------
 
----------- coverage: platform linux, python 3.10.8-final-0 -----------
+---------- coverage: platform linux, python 3.11.1-final-0 -----------
 Name                                                                                                       Stmts   Miss  Cover
 ------------------------------------------------------------------------------------------------------------------------------
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/__init__.py                     1      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/__init__.py                0      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/authenticator.py          46      3    93%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/core/psnawp_exceptions.py       9      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/models/__init__.py              0      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/models/client.py               47     19    60%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/models/group.py                52     35    33%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/models/search.py               15      7    53%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/models/user.py                 72     53    26%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/psnawp.py                      30     11    63%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/utils/__init__.py               0      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/utils/endpoints.py              2      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/utils/misc.py                  13      0   100%
-/opt/hostedtoolcache/Python/3.10.8/x64/lib/python3.10/site-packages/psnawp_api/utils/request_builder.py       71     42    41%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/__init__.py                     1      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/__init__.py                0      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/authenticator.py          46      3    93%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/core/psnawp_exceptions.py       9      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/models/__init__.py              0      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/models/client.py               47     19    60%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/models/group.py                52     35    33%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/models/search.py               15      7    53%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/models/user.py                 72     53    26%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/psnawp.py                      30     11    63%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/utils/__init__.py               0      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/utils/endpoints.py              2      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/utils/misc.py                  13      0   100%
+/opt/hostedtoolcache/Python/3.11.1/x64/lib/python3.11/site-packages/psnawp_api/utils/request_builder.py       71     42    41%
 ------------------------------------------------------------------------------------------------------------------------------
 TOTAL                                                                                                        358    170    53%
 
 =========================== short test summary info ============================
 FAILED tests/unit_tests/test_authenticator.py::test_authenticator__access_token_from_refresh_token
-ERROR tests/unit_tests/test_client.py::test_client__online_id - psnawp_api.co...
-ERROR tests/unit_tests/test_client.py::test_client__account_id - psnawp_api.c...
-ERROR tests/unit_tests/test_client.py::test_client__get_profile_legacy - psna...
-ERROR tests/unit_tests/test_client.py::test_client__account_devices - psnawp_...
-ERROR tests/unit_tests/test_client.py::test_client__get_friends - psnawp_api....
-ERROR tests/unit_tests/test_client.py::test_client__get_groups - psnawp_api.c...
-ERROR tests/unit_tests/test_client.py::test_client__available_to_play - psnaw...
-ERROR tests/unit_tests/test_client.py::test_client__blocked_list - psnawp_api...
-ERROR tests/unit_tests/test_client.py::test_client__repr_and_str - psnawp_api...
-ERROR tests/unit_tests/test_group.py::test_group__group_incorrect_args - psna...
-ERROR tests/unit_tests/test_group.py::test_group__group_with_wrong_id - psnaw...
-ERROR tests/unit_tests/test_group.py::test_group__group_with_users - psnawp_a...
-ERROR tests/unit_tests/test_group.py::test_group__group_with_id - psnawp_api....
-ERROR tests/unit_tests/test_group.py::test_group__repr_and_str - psnawp_api.c...
-ERROR tests/unit_tests/test_group.py::test_group__change_name_dm - psnawp_api...
-ERROR tests/unit_tests/test_group.py::test_group__dming_blocked_user - psnawp...
-ERROR tests/unit_tests/test_group.py::test_group__change_name - psnawp_api.co...
-ERROR tests/unit_tests/test_group.py::test_group__leave_group - psnawp_api.co...
-ERROR tests/unit_tests/test_search.py::test_search__universal_search - psnawp...
-ERROR tests/unit_tests/test_search.py::test_search__get_title_details - psnaw...
-ERROR tests/unit_tests/test_user.py::test_user__user - psnawp_api.core.psnawp...
-ERROR tests/unit_tests/test_user.py::test_user__user_account_id - psnawp_api....
-ERROR tests/unit_tests/test_user.py::test_user__user_no_argument - psnawp_api...
-ERROR tests/unit_tests/test_user.py::test_user__user_wrong_acc_id - psnawp_ap...
-ERROR tests/unit_tests/test_user.py::test_user__prev_online_id - psnawp_api.c...
-ERROR tests/unit_tests/test_user.py::test_user__user_not_found - psnawp_api.c...
-ERROR tests/unit_tests/test_user.py::test_user__user_acct_id_not_found - psna...
-ERROR tests/unit_tests/test_user.py::test_user__get_presence - psnawp_api.cor...
-ERROR tests/unit_tests/test_user.py::test_user__get_presence_forbidden - psna...
-ERROR tests/unit_tests/test_user.py::test_user__friendship - psnawp_api.core....
-ERROR tests/unit_tests/test_user.py::test_user__is_blocked - psnawp_api.core....
-ERROR tests/unit_tests/test_user.py::test_user__repr_and_str - psnawp_api.cor...
-==================== 1 failed, 2 passed, 32 errors in 1.06s ====================
+ERROR tests/unit_tests/test_client.py::test_client__online_id - requests.exce...
+ERROR tests/unit_tests/test_client.py::test_client__account_id - requests.exc...
+ERROR tests/unit_tests/test_client.py::test_client__get_profile_legacy - requ...
+ERROR tests/unit_tests/test_client.py::test_client__account_devices - request...
+ERROR tests/unit_tests/test_client.py::test_client__get_friends - requests.ex...
+ERROR tests/unit_tests/test_client.py::test_client__get_groups - requests.exc...
+ERROR tests/unit_tests/test_client.py::test_client__available_to_play - reque...
+ERROR tests/unit_tests/test_client.py::test_client__blocked_list - requests.e...
+ERROR tests/unit_tests/test_client.py::test_client__repr_and_str - requests.e...
+ERROR tests/unit_tests/test_group.py::test_group__group_incorrect_args - requ...
+ERROR tests/unit_tests/test_group.py::test_group__group_with_wrong_id - reque...
+ERROR tests/unit_tests/test_group.py::test_group__group_with_users - requests...
+ERROR tests/unit_tests/test_group.py::test_group__group_with_id - requests.ex...
+ERROR tests/unit_tests/test_group.py::test_group__repr_and_str - requests.exc...
+ERROR tests/unit_tests/test_group.py::test_group__change_name_dm - requests.e...
+ERROR tests/unit_tests/test_group.py::test_group__dming_blocked_user - reques...
+ERROR tests/unit_tests/test_group.py::test_group__change_name - requests.exce...
+ERROR tests/unit_tests/test_group.py::test_group__leave_group - requests.exce...
+ERROR tests/unit_tests/test_search.py::test_search__universal_search - reques...
+ERROR tests/unit_tests/test_search.py::test_search__get_title_details - reque...
+ERROR tests/unit_tests/test_user.py::test_user__user - requests.exceptions.HT...
+ERROR tests/unit_tests/test_user.py::test_user__user_account_id - requests.ex...
+ERROR tests/unit_tests/test_user.py::test_user__user_no_argument - requests.e...
+ERROR tests/unit_tests/test_user.py::test_user__user_wrong_acc_id - requests....
+ERROR tests/unit_tests/test_user.py::test_user__prev_online_id - requests.exc...
+ERROR tests/unit_tests/test_user.py::test_user__user_not_found - requests.exc...
+ERROR tests/unit_tests/test_user.py::test_user__user_acct_id_not_found - requ...
+ERROR tests/unit_tests/test_user.py::test_user__get_presence - requests.excep...
+ERROR tests/unit_tests/test_user.py::test_user__get_presence_forbidden - requ...
+ERROR tests/unit_tests/test_user.py::test_user__friendship - requests.excepti...
+ERROR tests/unit_tests/test_user.py::test_user__is_blocked - requests.excepti...
+ERROR tests/unit_tests/test_user.py::test_user__repr_and_str - requests.excep...
+==================== 1 failed, 2 passed, 32 errors in 1.70s ====================
